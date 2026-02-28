@@ -1,0 +1,28 @@
+{
+    "manifest_version": 3,
+    "name": "FXL AI",
+    "description": "Profesjonalny OCR faktur dla serwisu FakturaXL",
+    "version": "1.0.0",
+    "icons": {
+        "16": "logo/favicon-96x96.png",
+        "48": "logo/favicon-96x96.png",
+        "128": "logo/web-app-manifest-192x192.png"
+    },
+    "action": {
+        "default_title": "FXL AI - OCR Faktur",
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "logo/favicon-96x96.png",
+            "48": "logo/favicon-96x96.png",
+            "128": "logo/web-app-manifest-192x192.png"
+        }
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ],
+    "host_permissions": [
+        "https://*.fakturaxl.pl/*"
+    ]
+}

@@ -1,0 +1,39 @@
+# Node modules (jeśli będą w przyszłości)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Build artifacts (na przyszłość)
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Chrome extension temporary files
+*.crx
+*.pem
+
+# Backup files
+*.bak
+*.backup
+
+# Internal documentation
+/docs/
+

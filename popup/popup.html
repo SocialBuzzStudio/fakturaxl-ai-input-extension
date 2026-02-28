@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="popup.css">
+    <title>FXL AI - OCR</title>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="brand">
+                <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h1>FXL AI</h1>
+            </div>
+            <span class="version-badge">v1.0.0</span>
+        </header>
+
+        <main class="content">
+            <div id="error-container" class="alert alert-error hidden">
+                <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span id="error-text"></span>
+            </div>
+
+            <div id="status-container" class="alert alert-success hidden">
+                <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span id="status-text"></span>
+            </div>
+
+            <form id="ocr-form">
+                <div class="form-group">
+                    <label for="api-key">Klucz OpenRouter</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="api-key" 
+                            class="form-control"
+                            placeholder="sk-or-v1-..."
+                            autocomplete="off"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Model AI</label>
+                    <input 
+                        type="text" 
+                        id="model" 
+                        class="form-control"
+                        value="google/gemini-2.0-flash-exp:free"
+                        placeholder="np. google/gemini-2.0-flash-exp:free"
+                        required
+                    />
+                    <span class="hint">Wymagany model obsługujący analizę obrazu (vision).</span>
+                </div>
+
+                <div class="form-group file-upload-wrapper">
+                    <label>Faktura (PDF lub Obraz)</label>
+                    <input 
+                        type="file" 
+                        id="file-input" 
+                        class="file-upload-input"
+                        accept="image/*,application/pdf"
+                        required
+                    />
+                    <label for="file-input" class="file-upload-label" id="drop-zone">
+                        <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <span class="upload-text-main">Kliknij, aby wybrać plik</span>
+                        <span class="upload-text-sub">Obsługiwane formaty: PDF, JPG, PNG</span>
+                    </label>
+                    
+                    <div id="file-preview" class="file-info hidden">
+                        <svg class="file-icon-small" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span id="file-name-text">nazwa_pliku.pdf</span>
+                    </div>
+                </div>
+
+                <button type="submit" id="process-btn" class="btn-submit" disabled>
+                    <span id="btn-text">Przetwórz fakturę</span>
+                    <div id="btn-loader" class="spinner hidden"></div>
+                </button>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <div class="disclaimer">
+                Nieoficjalne narzędzie. Nie jesteśmy powiązani z FakturaXL.
+            </div>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
