@@ -3,7 +3,7 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.0.0
 // @description  Automatyczne wypełnianie faktur kosztowych w FakturaXL przy użyciu AI
-// @author       SocialBuzzStudio Sp. z o.o. (socialbuzzstudio.com)
+// @author       FXL AI
 // @match        https://*.fakturaxl.pl/?page=faktura_vat_koszty*
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -57,9 +57,9 @@
                         nazwa: { type: "string" },
                         ilosc: { type: "number" },
                         jm: { type: "string", description: "Jednostka miary np. szt., kg, usł." },
-                        cena_jednostkowa_na_fakturze: { 
-                            type: "boolean", 
-                            description: "Set to true ONLY if the unit price is explicitly printed on the document line. Set to false if only Total Net Value is visible." 
+                        cena_jednostkowa_na_fakturze: {
+                            type: "boolean",
+                            description: "Set to true ONLY if the unit price is explicitly printed on the document line. Set to false if only Total Net Value is visible."
                         },
                         cena_jednostkowa_netto: { type: "number", description: "Cena za jedną jednostkę" },
                         wartosc_linii_netto: { type: "number", description: "Wartość netto pozycji (cena * ilość)" },
@@ -71,13 +71,13 @@
             }
         },
         required: [
-            "numer", "data_wystawienia", "data_sprzedazy", "miejsce", 
+            "numer", "data_wystawienia", "data_sprzedazy", "miejsce",
             "waluta", "termin_platnosci_dni", "sprzedawca", "pozycje"
         ],
         additionalProperties: false
     };
 
-    const SYSTEM_PROMPT = `Jesteś asystentem OCR specjalizującym się w polskich fakturach B2B. 
+    const SYSTEM_PROMPT = `Jesteś asystentem OCR specjalizującym się w polskich fakturach B2B.
 Przeanalizuj dostarczony obraz/PDF faktury i wyekstrahuj dane.
 
 ZASADY LOGICZNE:
@@ -103,11 +103,34 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
     };
 
     const COUNTRY_MAP = {
-        'POLSKA': '1', 'NIEMCY': '3', 'CZECHY': '2', 
-        'WIELKA BRYTANIA': '17', 'USA': '10', 'STANY ZJEDNOCZONE': '10',
-        'FRANCJA': '40', 'HISZPANIA': '5', 'WŁOCHY': '16', 
-        'UKRAINA': '14', 'HOLANDIA': '43', 'BELGIA': '23',
-        'CHINY': '29'
+        'POLSKA': '1', 'POLAND': '1',
+        'NIEMCY': '3', 'GERMANY': '3',
+        'CZECHY': '2', 'CZECH REPUBLIC': '2', 'CZECHIA': '2',
+        'WIELKA BRYTANIA': '17', 'UNITED KINGDOM': '17', 'GREAT BRITAIN': '17', 'UK': '17',
+        'USA': '10', 'STANY ZJEDNOCZONE': '10', 'UNITED STATES': '10', 'UNITED STATES OF AMERICA': '10',
+        'FRANCJA': '40', 'FRANCE': '40',
+        'HISZPANIA': '5', 'SPAIN': '5',
+        'WŁOCHY': '16', 'ITALY': '16',
+        'UKRAINA': '14', 'UKRAINE': '14',
+        'HOLANDIA': '43', 'NETHERLANDS': '43', 'HOLLAND': '43',
+        'BELGIA': '23', 'BELGIUM': '23',
+        'CHINY': '29', 'CHINA': '29',
+        'AUSTRIA': '22',
+        'SZWAJCARIA': '11', 'SWITZERLAND': '11',
+        'SZWECJA': '12', 'SWEDEN': '12',
+        'NORWEGIA': '82', 'NORWAY': '82',
+        'DANIA': '33', 'DENMARK': '33',
+        'IRLANDIA': '4', 'IRELAND': '4',
+        'PORTUGALIA': '88', 'PORTUGAL': '88',
+        'RUMUNIA': '8', 'ROMANIA': '8',
+        'WĘGRY': '15', 'HUNGARY': '15',
+        'KANADA': '55', 'CANADA': '55',
+        'JAPONIA': '52', 'JAPAN': '52',
+        'KOREA POŁUDNIOWA': '60', 'SOUTH KOREA': '60',
+        'AUSTRALIA': '21',
+        'ROSJA': '7', 'RUSSIA': '7',
+        'TURCJA': '13', 'TURKEY': '13', 'TURKIYE': '13',
+        'INDIE': '45', 'INDIA': '45'
     };
 
     // ============================================================================
@@ -191,7 +214,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             gap: 8px;
             letter-spacing: -0.025em;
         }
-        
+
         #fxl-ai-modal-title span.icon {
             background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
             -webkit-background-clip: text;
@@ -257,7 +280,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             border-color: var(--fxl-primary);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
-        
+
         .fxl-helper-text {
             font-size: 11px;
             color: var(--fxl-text-muted);
@@ -285,14 +308,14 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             border-color: var(--fxl-primary);
             background: #eff6ff;
         }
-        
+
         .fxl-upload-icon {
             width: 40px;
             height: 40px;
             color: #9ca3af;
             transition: color 0.2s;
         }
-        
+
         #fxl-drop-zone:hover .fxl-upload-icon {
             color: var(--fxl-primary);
         }
@@ -303,7 +326,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             font-weight: 500;
             color: var(--fxl-text-muted);
         }
-        
+
         #fxl-drop-zone span.sub-text {
             font-size: 12px;
             color: #9ca3af;
@@ -324,7 +347,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             align-items: center;
             gap: 10px;
         }
-        
+
         .fxl-file-icon {
             width: 24px;
             height: 24px;
@@ -338,7 +361,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             color: var(--fxl-text-main);
             flex-grow: 1;
         }
-        
+
         .fxl-remove-file {
             font-size: 18px;
             cursor: pointer;
@@ -405,7 +428,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             transform: translateY(-1px);
             box-shadow: 0 6px 8px -1px rgba(79, 70, 229, 0.3);
         }
-        
+
         #fxl-process-btn:active:not(:disabled) {
             transform: translateY(0);
         }
@@ -421,7 +444,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
         #fxl-process-btn.loading {
             color: transparent;
         }
-        
+
         #fxl-process-btn.loading::after {
             content: "";
             position: absolute;
@@ -477,7 +500,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             transform: translateY(-4px) scale(1.05);
             box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.4);
         }
-        
+
         /* Tooltip for FAB */
         #fxl-ai-trigger-btn::before {
             content: "Wypełnij z AI";
@@ -495,7 +518,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             pointer-events: none;
             white-space: nowrap;
         }
-        
+
         #fxl-ai-trigger-btn:hover::before {
             opacity: 1;
             transform: translateX(0);
@@ -556,7 +579,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                         plugins: [
                             {
                                 id: 'file-parser',
-                                pdf: { engine: 'pdf-text' }
+                                pdf: { engine: 'native' }
                             }
                         ],
                         response_format: {
@@ -622,7 +645,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
 
                         try {
                             const data = JSON.parse(response.responseText);
-                            
+
                             if (!data.choices || !data.choices[0] || !data.choices[0].message) {
                                 reject(new Error('Otrzymano nieprawidłową odpowiedź z serwera AI.'));
                                 return;
@@ -682,7 +705,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                     console.warn(`Nie znaleziono pola: ${selector}`);
                 }
             };
-            
+
             const forceSetVal = (selector, value) => {
                 const $el = $(selector);
                 if ($el.length && $el.is(':visible')) {
@@ -751,7 +774,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                         setVal(`#nazwa_${rowIndex}`, item.nazwa || '');
                         const quantity = parseFloat(item.ilosc) || 1;
                         setVal(`#ilosc_${rowIndex}`, quantity);
-                        
+
                         // Jednostka miary
                         const unitFromAI = item.jm || 'szt.';
                         const $jmSelect = $(`#jm_${rowIndex}`);
@@ -764,10 +787,10 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                         }
 
                         setVal(`#vat_${rowIndex}`, item.vat || '23');
-                        
+
                         // 3b. STRATEGIA WARTOŚCI (Kluczowa zmiana: Poprawione Selektory)
                         let valueSet = false;
-                        
+
                         if (isPLN) {
                             // STRATEGIA 1: Wpisanie Wartości Netto (Total Net)
                             const totalNetValue = parseFloat(item.wartosc_linii_netto).toFixed(2);
@@ -776,7 +799,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                                 `#wartosc_netto_${rowIndex}`,
                                 `input[name="faktura_pozycje[${rowIndex}][wartosc_netto_rabat]"]`
                             ];
-                            
+
                             for (const sel of netSelectors) {
                                 if (forceSetVal(sel, totalNetValue)) {
                                     console.log(`FXL AI: [PLN] Sukces! Wpisano wartość netto: ${totalNetValue} do ${sel}`);
@@ -784,19 +807,19 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                                     break;
                                 }
                             }
-                            
+
                             // STRATEGIA 2: Wpisanie Wartości Brutto (Jeśli Netto zawiodło)
                             if (!valueSet) {
                                 console.log(`FXL AI: [PLN] Nie udało się wpisać Netto. Próbuję Brutto...`);
                                 const vatRate = parseFloat(item.vat) || 23;
                                 const totalGrossValue = (parseFloat(item.wartosc_linii_netto) * (1 + vatRate / 100)).toFixed(2);
-                                
+
                                 const grossSelectors = [
                                     `#wartosc_brutto_rabat_${rowIndex}`,
                                     `#wartosc_brutto_${rowIndex}`,
                                     `input[name="faktura_pozycje[${rowIndex}][wartosc_brutto_rabat]"]`
                                 ];
-                                
+
                                 for (const sel of grossSelectors) {
                                     if (forceSetVal(sel, totalGrossValue)) {
                                         console.log(`FXL AI: [PLN] Sukces! Wpisano wartość BRUTTO: ${totalGrossValue} do ${sel}`);
@@ -806,18 +829,18 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                                 }
                             }
                         }
-                        
+
                         // STRATEGIA 3 (FALLBACK): Jeśli wszystko inne zawiodło, wpisujemy cenę jednostkową
                         if (!valueSet) {
                             console.warn(`FXL AI: [FALLBACK] Nie udało się wpisać sumy. Wpisuję cenę jednostkową.`);
-                            
+
                             let unitPrice;
                             if (item.cena_jednostkowa_na_fakturze) {
                                 unitPrice = parseFloat(item.cena_jednostkowa_netto);
                             } else {
                                 unitPrice = parseFloat(item.wartosc_linii_netto) / quantity;
                             }
-                            
+
                             setVal(`#netto_${rowIndex}`, unitPrice.toFixed(4));
                         }
                     }
@@ -868,7 +891,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                     console.log('FXL AI: Wywołano Dropzone.addFile (sprawdź czy plik jest na liście).');
                 } catch (dzError) {
                     console.warn('FXL AI: Dropzone API Error (ignoruję i próbuję fallback):', dzError);
-                    triggerInputFallback(file); 
+                    triggerInputFallback(file);
                 }
             } else {
                 triggerInputFallback(file);
@@ -890,7 +913,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             this.injectTriggerButton();
             this.createModal();
             this.attachEventListeners();
-            
+
             // Rejestracja komendy menu (opcjonalnie)
             GM_registerMenuCommand("Otwórz FXL AI", () => this.openModal());
         }
@@ -952,7 +975,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
                             </div>
                         </div>
                         <input type="file" id="fxl-file-input" accept=".pdf,.jpg,.jpeg,.png">
-                        
+
                         <div id="fxl-file-preview" style="display:none;">
                             ${icons.file}
                             <p id="fxl-file-name">-</p>
@@ -1039,10 +1062,10 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             // Załaduj zapisane wartości
             this.elements.apiKeyInput.value = ConfigManager.getApiKey();
             this.elements.modelInput.value = ConfigManager.getModel();
-            
+
             this.elements.overlay.style.display = 'block';
             this.elements.modal.style.display = 'block';
-            
+
             // Animacja wejścia (Next frame for transition)
             requestAnimationFrame(() => {
                 this.elements.overlay.classList.add('visible');
@@ -1076,7 +1099,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             this.currentFile = file;
             const sizeMB = (file.size / 1024 / 1024).toFixed(2);
             this.elements.fileName.textContent = `${file.name} (${sizeMB} MB)`;
-            
+
             this.elements.filePreview.style.display = 'flex';
             this.elements.dropZone.style.display = 'none';
             this.validateForm();
@@ -1188,7 +1211,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
     class App {
         static init() {
             console.log('🚀 [FXL AI] UserScript inicjalizowany...');
-            
+
             // Sprawdź czy jesteśmy na właściwej stronie
             if (!window.location.href.match(/https:\/\/(?:[a-zA-Z0-9-]+\.)?fakturaxl\.pl\/\?page=faktura_vat_koszty/)) {
                 console.warn('[FXL AI] Niewłaściwa strona - UserScript nie zostanie uruchomiony.');
@@ -1198,7 +1221,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
             // Inicjalizacja UI
             const ui = new UIManager();
             ui.init();
-            
+
             console.log('✅ [FXL AI] UserScript gotowy do użycia!');
         }
     }
