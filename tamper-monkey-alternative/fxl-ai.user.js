@@ -21,7 +21,7 @@
     // ============================================================================
 
     const CONFIG = {
-        DEFAULT_MODEL: 'google/gemini-3-flash-preview',
+        DEFAULT_MODEL: 'openai/gpt-6.1-terra',
         OPENROUTER_URL: 'https://openrouter.ai/api/v1/chat/completions'
     };
 
@@ -962,7 +962,7 @@ Wygeneruj odpowiedź ściśle według podanego schematu JSON.`;
 
                     <div class="fxl-form-group">
                         <label for="fxl-model">Model AI</label>
-                        <input type="text" id="fxl-model" placeholder="google/gemini-3-flash-preview">
+                        <input type="text" id="fxl-model" placeholder="openai/gpt-6.1-terra">
                     </div>
 
                     <div class="fxl-form-group">
